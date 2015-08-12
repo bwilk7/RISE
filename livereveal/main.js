@@ -52,18 +52,13 @@ function markupSlides(container) {
     function new_slide() {
         slide_counter++;
         subslide_counter = -1;
-        return $('<section>').appendTo(container);
-    }
-    function new_subslide() {
-        subslide_counter++;
-        return $('<section>').attr('id', 'slide-'+slide_counter+'-'+subslide_counter)
-                .appendTo(slide_section);
+        return $('<section class="slide">').appendTo(container);
     }
 
     // Containers for the first slide.
     slide_section = new_slide();
-    subslide_section = new_subslide();
-    var current_fragment = subslide_section;
+    //subslide_section = new_subslide();
+    //var current_fragment = subslide_section;
 
     var selected_cell_idx = IPython.notebook.get_selected_index();
     var selected_cell_slide = [0, 0];
@@ -89,10 +84,10 @@ function markupSlides(container) {
                 slide_section = new_slide();
                 // In each subslide, we insert cells directly into the
                 // <section> until we reach a fragment, when we create a div.
-                current_fragment = subslide_section = new_subslide();
+                //current_fragment = subslide_section = new_subslide();
             } else if (slide_type === 'subslide') {
                 // Start new subslide
-                current_fragment = subslide_section = new_subslide();
+                //current_fragment = subslide_section = new_subslide();
             } else if (slide_type === 'fragment') {
                 current_fragment = $('<div>').addClass('fragment')
                                     .appendTo(subslide_section);
@@ -115,7 +110,7 @@ function markupSlides(container) {
                 $('<aside>').addClass('notes').append(cell.element)
             );
         } else {
-            current_fragment.append(cell.element);
+            slide_section.append(cell.element);
         }
 
         // Hide skipped cells
@@ -152,86 +147,23 @@ function Revealer() {
   $('div#header').hide();
   $('div#site').css("height", "100%");
   $('div#ipython-main-app').css("position", "static");
-  $('div#notebook').addClass("reveal");
-  $('div#notebook-container').addClass("slides");
+  $('div#notebook').addClass("fullpage");
+  $('div#notebook-container').addClass("section");
+  $('div#notebook-container').css('width','100%');
+//  $('div#notebook-container').append("<div class='section>'></div>");
 
   // Header
-  $('head').prepend('<link rel="stylesheet" href=' + require.toUrl("./reveal.js/css/theme/simple.css") + ' id="theme" />');
-  $('head').prepend('<link rel="stylesheet" href=' + require.toUrl("./reset_reveal.css") + ' id="revealcss" />');
-  $('head').append('<link rel="stylesheet" href=' + require.toUrl("./main.css") + ' id="maincss" />');
-
+  $('head').append('<link rel="stylesheet" href=' + require.toUrl("./bower_components/fullpage.js/jquery.fullPage.css") + ' id="maincss" />');
   // Tailer
-  require(['./reveal.js/lib/js/head.min.js',
-           './reveal.js/js/reveal.js'].map(require.toUrl),function(){
+  //require(['./reveal.js/lib/js/head.min.js',
+  //         './reveal.js/js/reveal.js'].map(require.toUrl),function(){
+  require(['./bower_components/fullpage.js/jquery.fullPage.min.js'].map(require.toUrl),function(){
     // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
 
-    var options = {
-    controls: config.get_sync('controls'),
-    progress: config.get_sync('progress'),
-    history: config.get_sync('history'),
+    var options = {};
 
-    // You can switch width and height to fix the projector
-    width: config.get_sync('width'),
-    height: config.get_sync('height'),
-    minScale: config.get_sync('minScale'), //we need this for codemirror to work right)
+    $('.fullpage').fullpage();
 
-    // available themes are in /css/theme
-    theme: Reveal.getQueryHash().theme || config.get_sync('theme'),
-    // default/cube/page/concave/zoom/linear/none
-    transition: Reveal.getQueryHash().transition || config.get_sync('transition'),
-
-    slideNumber: config.get_sync('slideNumber'),
-
-    //parallaxBackgroundImage: 'https://raw.github.com/damianavila/par_IPy_slides_example/gh-pages/figs/star_wars_stormtroopers_darth_vader.jpg',
-    //parallaxBackgroundSize: '2560px 1600px',
-
-    keyboard: {
-    13: null, // Enter disabled
-    27: null, // ESC disabled
-    38: null, // up arrow disabled
-    40: null, // down arrow disabled
-    66: null, // b, black pause disabled, use period or forward slash
-    72: null, // h, left disabled
-    74: null, // j, down disabled
-    75: null, // k, up disabled
-    76: null, // l, right disabled
-    78: null, // n, down disable
-    79: null, // o disabled
-    80: null, // p, up disable
-    // 83: null, // s, notes, but not working because notes is a plugin
-    87: function() {Reveal.toggleOverview();}, // w, toggle overview
-    188: function() {$('#help_b,#exit_b').fadeToggle();},
-    },
-
-    // Optional libraries used to extend on reveal.js
-    // Notes are working partially... it opens the notebooks, not the slideshows...
-    dependencies: [
-            //{ src: "static/custom/livereveal/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
-            //{ src: "static/custom/livereveal/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
-            { src: require.toUrl("./reveal.js/plugin/notes/notes.js"), async: true, condition: function() { return !!document.body.classList; } }
-        ]
-    };
-
-    // Set up the Leap Motion integration if configured
-    var leap = config.get_sync('leap_motion');
-    if (leap !== undefined) {
-        options.dependencies.push({ src: require.toUrl('./reveal.js/plugin/leap/leap.js'), async: true });
-        options.leap = leap;
-    }
-
-    Reveal.initialize(options);
-
-    Reveal.addEventListener( 'ready', function( event ) {
-      Unselecter();
-      window.scrollTo(0,0);
-      Reveal.layout();
-      $('#start_livereveal').blur();
-    });
-
-    Reveal.addEventListener( 'slidechanged', function( event ) {
-      Unselecter();
-      window.scrollTo(0,0);
-    });
   });
 }
 
@@ -257,7 +189,7 @@ function fixCellHeight(){
     }
   }
 }
-
+/*
 function setupKeys(mode){
   if (mode === 'reveal_mode') {
     IPython.keyboard_manager.command_shortcuts.set_shortcut("shift-enter", "ipython.execute-in-place")
@@ -267,7 +199,7 @@ function setupKeys(mode){
     IPython.keyboard_manager.edit_shortcuts.set_shortcut("shift-enter", "ipython.run-select-next")
   }
 }
-
+*/
 function KeysMessager() {
   var message = $('<div/>').append(
                   $("<p/></p>").addClass('dialog').html(
@@ -335,8 +267,10 @@ function buttonExit() {
 }
 
 function Remover() {
-  Reveal.configure({minScale: 1.0});
+  /*Reveal.configure({minScale: 1.0});
   Reveal.removeEventListeners();
+  */
+  $.fn.fullpage.destroy('all');
   $('div#site').css("height", "");
   $('div#site').css('background-color','');
   $("div#ipython-main-app").css("position", "");
@@ -344,8 +278,8 @@ function Remover() {
   $('div#maintoolbar').show();
   IPython.menubar._size_header();
 
-  $('div#notebook').removeClass("reveal");
-  $('div#notebook-container').removeClass("slides");
+  $('div#notebook').removeClass("fullpage");
+  $('div#notebook-container').removeClass("section");
   $('div#notebook-container').css('width','');
   $('div#notebook-container').css('height','');
   $('div#notebook-container').css('zoom','');
@@ -361,6 +295,7 @@ function Remover() {
   $('.pause-overlay').remove();
 
   var cells = IPython.notebook.get_cells();
+  console.log(cells);
   for(var i in cells){
     $('.cell:nth('+i+')').removeClass('reveal-skip');
     $('div#notebook-container').append(cells[i].element);
@@ -384,16 +319,9 @@ function revealMode() {
     setStartingSlide(selected_slide);
     // Adding the reveal stuff
     Revealer();
-    // Minor modifications for usability
-    setupKeys("reveal_mode");
-    buttonExit();
-    buttonHelp();
     $('#maintoolbar').addClass('reveal_tagging');
   } else {
     Remover();
-    setupKeys("notebook_mode");
-    $('#exit_b').remove();
-    $('#help_b').remove();
     $('#maintoolbar').removeClass('reveal_tagging');
     // Workaround... should be a better solution. Need to investigate codemirror
     fixCellHeight();
