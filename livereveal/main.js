@@ -13,7 +13,9 @@ define([
         'jquery',
         'base/js/utils',
         'services/config',
-], function(require, $, utils, configmod) {
+        'base/js/page',
+        'base/js/events'
+], function(require, $, utils, configmod,page,events) {
 
 var config_section = new configmod.ConfigSection('livereveal',
                             {base_url: utils.get_body_data("baseUrl")});
@@ -41,6 +43,16 @@ IPython.notebook.get_cell_elements = function () {
   */
     return this.container.find("div.cell");
 };
+
+/* This makes sure that after executing a cell that we show full screen still in FullPage
+ *
+ */
+events.on("set_dirty.Notebook",function(){
+  if($('#maintoolbar').hasClass('reveal_tagging')){
+  $('div#site').css("height", "100%");
+  $.fn.fullpage.reBuild();
+}
+});
 
 /* Use the slideshow metadata to rearrange cell DOM elements into the
  * structure expected by reveal.js
@@ -150,6 +162,9 @@ function Revealer() {
   $('div#notebook').addClass("fullpage");
   $('div#notebook-container').addClass("section");
   $('div#notebook-container').css('width','100%');
+  $('div#notebook-container').css('padding','0px');
+  //MAKE THIS ALWAYS WHEN YOU MOVE HIT THE NEXT BUTTON, ITS BEING OVER WRITTEN CURRENTLY
+  $('div#notebook').css('padding-top','0px');
 //  $('div#notebook-container').append("<div class='section>'></div>");
 
   // Header
@@ -157,12 +172,14 @@ function Revealer() {
   // Tailer
   //require(['./reveal.js/lib/js/head.min.js',
   //         './reveal.js/js/reveal.js'].map(require.toUrl),function(){
-  require(['./bower_components/fullpage.js/jquery.fullPage.min.js'].map(require.toUrl),function(){
+  require(['./bower_components/slimScroll/jquery.slimscroll.min.js','./bower_components/fullpage.js/jquery.fullPage.min.js'].map(require.toUrl),function(){
     // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
 
-    var options = {};
+    var options = {loopHorizontal: false,controlArrows:false,scrollOverflow:true};
 
-    $('.fullpage').fullpage();
+    $('.fullpage').fullpage(options);
+    Unselecter();
+    $.fn.fullpage.setKeyboardScrolling(false, 'down,up');
 
   });
 }
@@ -230,42 +247,6 @@ function KeysMessager() {
   });
 }
 
-function buttonHelp() {
-    var help_button = $('<i/>')
-        .attr('id','help_b')
-        .attr('title','Reveal Shortcuts Help')
-        .addClass('fa-question fa-4x fa')
-        .addClass('my-main-tool-bar')
-        .css('position','fixed')
-        .css('bottom','0.5em')
-        .css('left','0.6em')
-        .css('opacity', '0.6')
-        .click(
-            function(){
-                KeysMessager();
-            }
-        );
-    $('.reveal').after(help_button);
-}
-
-function buttonExit() {
-    var exit_button = $('<i/>')
-        .attr('id','exit_b')
-        .attr('title','RISE Exit')
-        .addClass('fa-times-circle fa-4x fa')
-        .addClass('my-main-tool-bar')
-        .css('position','fixed')
-        .css('top','0.5em')
-        .css('left','0.48em')
-        .css('opacity', '0.6')
-        .click(
-            function(){
-                revealMode('simple', 'zoom');
-            }
-        );
-    $('.reveal').after(exit_button);
-}
-
 function Remover() {
   /*Reveal.configure({minScale: 1.0});
   Reveal.removeEventListeners();
@@ -283,6 +264,7 @@ function Remover() {
   $('div#notebook-container').css('width','');
   $('div#notebook-container').css('height','');
   $('div#notebook-container').css('zoom','');
+  $('div#notebook').css('padding-top','20px');
 
   $('#maincss').remove();
   $('#theme').remove();
@@ -338,9 +320,14 @@ function setup() {
     },
   ]);
   var document_keydown = function(event) {
-    if (event.which == 82 && event.altKey) {
+    if (event.which == 82 && event.altKey || event.which == 27) {
       revealMode();
       return false;
+    }
+    if(event.which == 13 &&  $('#maintoolbar').hasClass('reveal_tagging')){
+      $('div#site').css("height", "100% !important");
+      $.fn.fullpage.reBuild();
+      $('div#site').css("height", "100% !important");
     }
     return true;
   };
