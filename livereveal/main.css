@@ -144,3 +144,25 @@ kbd {
   line-height: 1.4;
   white-space: nowrap;
 }
+
+.fullpage h1{font-size:8em;
+}
+
+.fullpage h2{font-size:4em;
+}
+
+.fullpage h3{font-size:3em;}
+
+.fullpage p, .fullpage ul{font-size: 2em;}
+
+.fullpage p{line-height:1.1em;}
+
+.fullpage ul ul{font-size:1em !important;}
+
+.fullpage pre{margin:0px;line-height:1.1em;}
+
+.fullpage p.scale, .fullpage ul.scale{font-size:1.5em !important;}
+
+.fullpage div.code_cell {font-size:2em;}
+
+.fullpage div.cm-s-ipython {max-width:none !important;}

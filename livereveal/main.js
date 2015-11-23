@@ -49,11 +49,17 @@ IPython.notebook.get_cell_elements = function () {
  */
 events.on("set_dirty.Notebook",function(){
   if($('#maintoolbar').hasClass('reveal_tagging')){
-  $('div#site').css("height", "100%");
+  $('div#site').css("height", "100vh");
   $.fn.fullpage.reBuild();
+  //$('.slimScrollDiv').slimscroll({height:'auto'})
+  console.log("FULLPAGED");
 }
 });
 
+
+events.on('resize-header.Page',function(){
+console.log("FIRED");
+});
 /* Use the slideshow metadata to rearrange cell DOM elements into the
  * structure expected by reveal.js
  */
@@ -168,7 +174,8 @@ function Revealer() {
 //  $('div#notebook-container').append("<div class='section>'></div>");
 
   // Header
-  $('head').append('<link rel="stylesheet" href=' + require.toUrl("./bower_components/fullpage.js/jquery.fullPage.css") + ' id="maincss" />');
+  $('head').append('<link rel="stylesheet" href=' + require.toUrl("./main.css") + ' id="maincss" />');
+  $('head').append('<link rel="stylesheet" href=' + require.toUrl("./bower_components/fullpage.js/jquery.fullPage.css") + ' id="fullpagecss" />');
   // Tailer
   //require(['./reveal.js/lib/js/head.min.js',
   //         './reveal.js/js/reveal.js'].map(require.toUrl),function(){
@@ -206,17 +213,17 @@ function fixCellHeight(){
     }
   }
 }
-/*
+
 function setupKeys(mode){
   if (mode === 'reveal_mode') {
-    IPython.keyboard_manager.command_shortcuts.set_shortcut("shift-enter", "ipython.execute-in-place")
-    IPython.keyboard_manager.edit_shortcuts.set_shortcut("shift-enter", "ipython.execute-in-place")
+    IPython.keyboard_manager.command_shortcuts.set_shortcut("shift-enter", "ipython.execute-and-insert-after")
+    IPython.keyboard_manager.edit_shortcuts.set_shortcut("shift-enter", "ipython.execute-and-insert-after")
   } else if (mode === 'notebook_mode') {
     IPython.keyboard_manager.command_shortcuts.set_shortcut("shift-enter", "ipython.run-select-next")
     IPython.keyboard_manager.edit_shortcuts.set_shortcut("shift-enter", "ipython.run-select-next")
   }
 }
-*/
+
 function KeysMessager() {
   var message = $('<div/>').append(
                   $("<p/></p>").addClass('dialog').html(
@@ -267,6 +274,7 @@ function Remover() {
   $('div#notebook').css('padding-top','20px');
 
   $('#maincss').remove();
+  $("#fullpagecss").remove();
   $('#theme').remove();
   $('#revealcss').remove();
 
@@ -300,17 +308,20 @@ function revealMode() {
     // Set the hash part of the URL
     setStartingSlide(selected_slide);
     // Adding the reveal stuff
+    setupKeys("reveal_mode");
     Revealer();
     $('#maintoolbar').addClass('reveal_tagging');
   } else {
     Remover();
     $('#maintoolbar').removeClass('reveal_tagging');
     // Workaround... should be a better solution. Need to investigate codemirror
+    setupKeys("notebook_mode");
     fixCellHeight();
   }
 }
 
 function setup() {
+  
   IPython.toolbar.add_buttons_group([
     {
     'label'   : 'Enter/Exit Live Reveal Slideshow',
@@ -320,7 +331,7 @@ function setup() {
     },
   ]);
   var document_keydown = function(event) {
-    if (event.which == 82 && event.altKey || event.which == 27) {
+    if (event.which == 82 && event.altKey) {
       revealMode();
       return false;
     }
@@ -332,9 +343,29 @@ function setup() {
     return true;
   };
   $(document).keydown(document_keydown);
+  
+  height = 0;
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutationRecord) {
+       mutatedH = $(mutationRecord['target']).height();
+       if(mutatedH > height)
+       {
+         height = mutatedH;
+       }
+       else if( mutatedH < height)
+       {
+	   console.log(height);
+           $(mutationRecord['target']).height(height);
+       }
+    });    
+  });
+
+  var target = document.getElementById('site');
+  observer.observe(target, { attributes : true, attributeFilter : ['style'] });
+ 
 }
 
 setup.load_ipython_extension = setup;
 
-return setup;
+return  setup;
 });
